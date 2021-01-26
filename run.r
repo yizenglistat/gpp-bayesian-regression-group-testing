@@ -17,14 +17,14 @@ if(!cluster){
 	# isknown = TRUE for IT and MPT
 	# isknown = FALSE for DT and AT
 	input_args <- c('taskid=1',
-					'reps=200',
-					'nburn=1000',
-					'nkeep=1000',
-					'nthin=5',
+					'reps=1',
+					'nburn=0',
+					'nkeep=3',
+					'nthin=2',
 					'nstep=5',
 					'cjs=c(1,5,10,20)',
-					'Ns=c(1000, 5000, 10000)',
-					'models=c(1,3,5,7)',
+					'Ns=c(1e3)',
+					'models=c(1:8)',
 					'random=TRUE',
 					'homo=FALSE',
 					'plot=FALSE',
@@ -82,9 +82,9 @@ dir.create('./output/', showWarnings = FALSE)
 for(rep in 1:reps){
 
 	for(model in models){
-
+		print(model)
 		for(N in Ns){
-
+			print(N)
 			data_lst <- create_data(N=N, Se_true=c(1,1), Sp_true=c(1,1), model=model)
 
 			for(cj in cjs){
@@ -139,7 +139,6 @@ for(rep in 1:reps){
 					savepath = paste0(paste0(initial_path,'/model=',model,'/N=',N,'/cj=',cj,'/random/'))
 					dir.create(savepath, showWarnings = FALSE)
 					save_data(u_pred, g_pred, g_pred_true, taskid=taskid, reps=reps, rep=rep, visual=FALSE, savepath=savepath)
-					print(paste0('Done with rep=',rep))
 				}
 				if(FALSE){
 						

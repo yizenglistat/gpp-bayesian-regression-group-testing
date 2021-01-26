@@ -1,13 +1,19 @@
 create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
+	rtruncnorm <<- function(N, mean = 0, sd = 1, a = -Inf, b = Inf) {
+	  if (a > b) stop('Error: Truncation range is empty');
+	  U <- runif(N, pnorm(a, mean, sd), pnorm(b, mean, sd));
+	  qnorm(U, mean, sd)
+	}
+
 	model_list 	<- list()
 	# Define beta functions, age range [-3,3]
 	if (model == 1){
 		
 		u <- runif(N, -3, 3)
 
-		u_a <- qunif(0.05,-3,3)
-		u_b <- qunif(0.95,-3,3)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x){
 			A = sin(pi*x/2)+1.2
@@ -19,10 +25,10 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
 	}else if (model == 2){
 		
-		u <- rnorm(N,0,1.5)
+		u <- rtruncnorm(N, 0, 1.5, -3, 3)
 
-		u_a <- qnorm(0.05,0,1.5)
-		u_b <- qnorm(0.95,0,1.5)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x){
 			A = sin(pi*x/2)+1.2
@@ -36,8 +42,8 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 		
 		u <- runif(N, -1, 4)
 
-		u_a <- qunif(0.05,-1,4)
-		u_b <- qunif(0.95,-1,4)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x){
 			A = exp(-4+2*x)
@@ -49,10 +55,10 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
 	}else if (model == 4){
 		
-		u <- rnorm(N, 2, 1.5)
+		u <- rtruncnorm(N, 2, 1.5, -1, 4)
 
-		u_a <- qnorm(0.05,2,1.5)
-		u_b <- qnorm(0.95,2,1.5)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x){
 			A = exp(-4+2*x)
@@ -75,10 +81,10 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
 	}else if (model == 6){
 
-		u <- rnorm(N, 0.5, 0.5)
+		u <- rtruncnorm(N, 0.5, 0.5, 0, 1)
 
-		u_a <- qnorm(0.05,0.5,0.5)
-		u_b <- qnorm(0.95,0.5,0.5)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x) return(x^2/8)
 
@@ -97,10 +103,10 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
 	}else if (model == 8){
 
-		u <- rnorm(N, 0, 0.75)
+		u <- rtruncnorm(N, 0, 0.75, -1, 1)
 
-		u_a <- qnorm(0.05,0,0.75)
-		u_b <- qnorm(0.95,0,0.75)
+		u_a <- quantile(u,0.05)
+		u_b <- quantile(u,0.95)
 
 		f0 <- function(x) return(x^2/8)
 
@@ -108,7 +114,7 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 		
 	}
 
-	betaTrue <<- function(u, beta_list, center=TRUE){
+	betaTrue <<- function(u, beta_list, center=FALSE){
 		u_lower 		<- min(u); u_upper <- max(u)
 		n 				<- length(u)
 		nbeta 			<- length(beta_list) # total number of beta: beta0 beta1 beta2 beta3
@@ -124,10 +130,12 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 	logit_fun 	<<- function(x) log(x/(1-x))
 	logit_inv 	<<- function(x) return(1/(1+exp(-x)))
 	
+	
+
 	u_range 		<- u_b - u_a
 	u_pred 			<- seq(u_a, u_b, by=0.01)
 	beta_pred_true 	<- betaTrue(u_pred, model_list[[model]], center=FALSE) 
-	g_pred_true 	<- logit_inv(beta_pred_true)
+
 	X    			<- matrix(1,N,1)
 	
 	beta_true 		<- betaTrue(u, model_list[[model]], center=FALSE) # varying beta
@@ -141,6 +149,8 @@ create_data <- function(N=5000, Se_true, Sp_true, model=1){
 
 	prevalence 		<- mean(Y_true)
  	
+ 	g_pred_true 	<-logit_inv(beta_pred_true)
+
  	############################ homogenous
 	
 	u_homo			<- u[order(u)]
